@@ -1,5 +1,9 @@
+// Where the API lives. Empty in development (Vite proxies /api to localhost:5100); in production set VITE_API_URL at
+// build time, e.g. https://crmapi.sivayaantechnologies.com (no trailing slash). See web/.env.production.
+const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '')
+
 async function request(method, url, body) {
-  const res = await fetch(url, {
+  const res = await fetch(API_BASE + url, {
     method,
     headers: body ? { 'Content-Type': 'application/json' } : undefined,
     body: body ? JSON.stringify(body) : undefined,

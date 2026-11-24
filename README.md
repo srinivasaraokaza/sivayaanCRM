@@ -30,6 +30,11 @@ Rows with no name or an invalid email are rejected and listed. Up to 5,000 rows 
 - **Digital reach** (`/reach`): open leads you can contact without visiting, in two tabs. **WhatsApp** lists leads with a mobile number (10 digits starting 6-9; landlines can't use WhatsApp) with a *Message on WhatsApp* button that opens a ready-made chat. **Email** lists leads with an email address (on the account or a contact) with a *Send email* button that opens a pre-filled message in your mail app. *Mark sent* logs the contact and schedules the next follow-up in 3 days. Leads with neither are counted so you know they need a visit or call. Emails come from account/contact records, the spreadsheet import, or the *Their email* field on the visit form.
 - **Accounts / Contacts / Import leads / Products** as described above.
 
+## Deploying (web and API on separate domains)
+- **API**: publish with `dotnet publish api -c Release`. Allowed browser origins are `Cors:AllowedOrigins` in `appsettings.json` (currently `https://crm.sivayaantechnologies.com`); override with environment variables `Cors__AllowedOrigins__0`, `Cors__AllowedOrigins__1`, ... Use the exact origin: scheme + host, no path, no trailing slash. `localhost:5173` is always allowed for development. The SQLite file defaults to `crm.db` next to the app; set `ConnectionStrings__Crm` to put it somewhere persistent.
+- **Web**: `npm run build` in `web` reads `web/.env.production` (`VITE_API_URL=https://crmapi.sivayaantechnologies.com`) and bakes the API address into the bundle; deploy the `dist` folder. Change that file if the API moves.
+- A "blocked by CORS policy" error in the browser console means the API does not list the site's exact origin (or the API itself is down / returning an error, in which case the CORS header is also missing).
+
 ## Notes
 - Seed data lives in `api/Data/seed.json` (extracted from the workbook). Delete `api/crm.db` to reseed.
 - Workbook follow-up dates were stale, so seeded follow-ups are staggered from the first-run date by priority.
