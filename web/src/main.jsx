@@ -4,13 +4,16 @@ import { BrowserRouter } from 'react-router-dom'
 import './styles.css'
 import App from './App.jsx'
 import { ProductProvider } from './product.jsx'
+import AuthGate from './AuthGate.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <ProductProvider>
-        <App />
-      </ProductProvider>
+      <AuthGate>
+        <ProductProvider>
+          <App />
+        </ProductProvider>
+      </AuthGate>
     </BrowserRouter>
   </StrictMode>,
 )

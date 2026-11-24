@@ -40,4 +40,13 @@ Rows with no name or an invalid email are rejected and listed. Up to 5,000 rows 
 - Workbook follow-up dates were stale, so seeded follow-ups are staggered from the first-run date by priority.
 - "Today" and month boundaries use IST (UTC+5:30); change `Rules.UtcOffsetMinutes` in `CrmControllers.cs` for another timezone.
 - Leads imported or seeded on first run count as "new leads" for 30 days.
-- No authentication yet; add before exposing beyond localhost.
+- Access is protected by a login (see **Login** below).
+
+## Login
+
+The web app shows a sign-in page and the API rejects every request without a login token (only `/api/auth/login` is open).
+Set the credentials in configuration, never in code:
+
+- Development: `api/appsettings.Development.json` has `Auth:Username` / `Auth:Password` = `admin` / `admin`.
+- Production (e.g. `appsettings.Production.json` on the server) **must** set `Auth:Username` and `Auth:Password`; the API refuses to start otherwise.
+  Optionally set `Auth:JwtKey` (long random text) so users stay signed in across restarts, and `Auth:TokenHours` (default 12).

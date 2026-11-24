@@ -88,3 +88,13 @@ a.card:hover { border-color: var(--brand); }
 /* Keep dialogs above the Leaflet map (its panes and controls use z-index up to 1000). */
 .routemap { isolation: isolate; }
 .modal-bg { z-index: 2000; }
+
+/* Sign-in page and sidebar sign-out */
+.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #0f1b3d; padding: 16px; }
+.login-card { width: 100%; max-width: 340px; background: #fff; border-radius: 10px; padding: 28px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 10px 40px rgba(0,0,0,.35); }
+.login-card h1 { margin: 0; font-size: 22px; } .login-card p { margin: -8px 0 4px; }
+.login-card label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.login-card input { padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px; font: inherit; }
+.login-card button { padding: 10px; }
+.side .signout { position: absolute; bottom: 14px; left: 12px; right: 12px; display: flex; flex-direction: column; gap: 6px; }
+.side .signout small { margin: 0 4px; }

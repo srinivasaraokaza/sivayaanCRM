@@ -2,12 +2,23 @@
 // build time, e.g. https://crmapi.sivayaantechnologies.com (no trailing slash). See web/.env.production.
 const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '')
 
+// Login token, kept in this browser only. Cleared on sign-out or when the API says it is no longer valid.
+const TOKEN_KEY = 'crm.token'
+export const getToken = () => { try { return localStorage.getItem(TOKEN_KEY) || '' } catch { return '' } }
+export const setToken = (t) => { try { t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY) } catch { /* storage unavailable */ } }
+export const SIGNED_OUT = 'crm:signed-out'
+
 async function request(method, url, body) {
-  const res = await fetch(API_BASE + url, {
-    method,
-    headers: body ? { 'Content-Type': 'application/json' } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  })
+  const token = getToken()
+  const headers = {}
+  if (body) headers['Content-Type'] = 'application/json'
+  if (token) headers.Authorization = `Bearer ${token}`
+  const res = await fetch(API_BASE + url, { method, headers, body: body ? JSON.stringify(body) : undefined })
+  if (res.status === 401 && url !== '/api/auth/login') {
+    setToken('')
+    window.dispatchEvent(new Event(SIGNED_OUT))
+    throw new Error('Your session has expired. Please sign in again.')
+  }
   if (!res.ok) throw new Error((await res.text()) || `${method} ${url} failed (${res.status})`)
   const text = await res.text()
   return text ? JSON.parse(text) : null
@@ -21,6 +32,7 @@ const qs = (params) => {
 }
 
 export const api = {
+  login: (username, password) => request('POST', '/api/auth/login', { username, password }),
   meta: () => request('GET', '/api/meta'),
   dashboard: (productId) => request('GET', `/api/dashboard${qs({ productId })}`),
   accounts: (p) => request('GET', `/api/accounts${qs(p)}`),

@@ -12,6 +12,7 @@ import Reach from './pages/Reach.jsx'
 import Customers from './pages/Customers.jsx'
 import FollowUpsPage from './pages/FollowUpsPage.jsx'
 import { useProduct } from './product.jsx'
+import { useAuth } from './AuthGate.jsx'
 
 // Pages filtered by the product switcher.
 const productLinks = [
@@ -38,6 +39,7 @@ const Item = ({ to, label }) => (
 
 export default function App() {
   const { meta, productId, product, setProductId } = useProduct()
+  const { username, signOut } = useAuth()
   return (
     <div className="shell">
       <nav className="side">
@@ -59,6 +61,11 @@ export default function App() {
         <div className="section">
           <div className="section-title">Global</div>
           {globalLinks.map(([to, label]) => <Item key={to} to={to} label={label} />)}
+        </div>
+
+        <div className="section signout">
+          <small>Signed in as <b>{username}</b></small>
+          <button className="sm" onClick={signOut}>Sign out</button>
         </div>
       </nav>
       <main className="main">
