@@ -241,13 +241,15 @@ public class AccountsController(CrmDb db) : ControllerBase
         return Ok(new { a.Id });
     }
 
+    public record UpdateAccount(string? Name, string? Industry, string? Category, string? City, string? Landmark, string? Phone, string? Email, string? Website, double? Latitude, double? Longitude);
+
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, Account input)
+    public async Task<IActionResult> Update(string id, UpdateAccount input)
     {
         var a = await db.Accounts.FindAsync(id);
         if (a is null) return NotFound();
         if (string.IsNullOrWhiteSpace(input.Name)) return BadRequest("Name is required.");
-        a.Name = input.Name; a.Industry = input.Industry; a.Category = input.Category; a.City = input.City; a.Landmark = input.Landmark;
+        a.Name = input.Name.Trim(); a.Industry = input.Industry; a.Category = input.Category; a.City = input.City; a.Landmark = input.Landmark;
         a.Phone = input.Phone; a.Email = input.Email; a.Website = input.Website;
         if (input.Latitude is < -90 or > 90 || input.Longitude is < -180 or > 180) return BadRequest("Latitude must be -90 to 90 and longitude -180 to 180.");
         if ((input.Latitude == null) != (input.Longitude == null)) return BadRequest("Enter both latitude and longitude, or neither.");
@@ -337,13 +339,17 @@ public class LeadsController(CrmDb db) : ControllerBase
         return Ok(new { lead.Id, accountId = acc.Id });
     }
 
+    // Only the editable fields. The UI sends back a whole table row (with the business name as "account", etc.), and binding that
+    // straight onto the Lead entity failed with a 400, so updates read just these properties and ignore the rest.
+    public record UpdateLead(string? Status, string? Priority, string? Source, string? NextAction, DateTime? FollowUpDate, string? Notes, string? CurrentSoftware, string? Competitor);
+
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, Lead input)
+    public async Task<IActionResult> Update(int id, UpdateLead input)
     {
         var l = await db.Leads.FindAsync(id);
         if (l is null) return NotFound();
-        if (!Stages.LeadStatuses.Contains(input.Status)) return BadRequest("Invalid status.");
-        l.Status = input.Status; l.Priority = input.Priority; l.Source = input.Source; l.NextAction = input.NextAction; l.FollowUpDate = input.FollowUpDate;
+        if (input.Status is null || !Stages.LeadStatuses.Contains(input.Status)) return BadRequest("Invalid status.");
+        l.Status = input.Status; l.Priority = input.Priority ?? l.Priority; l.Source = input.Source; l.NextAction = input.NextAction; l.FollowUpDate = input.FollowUpDate;
         l.Notes = input.Notes; l.CurrentSoftware = input.CurrentSoftware; l.Competitor = input.Competitor;
         await db.SaveChangesAsync();
         return NoContent();
@@ -409,12 +415,15 @@ public class ContactsController(CrmDb db) : ControllerBase
         return Ok(new { c.Id });
     }
 
+    public record UpdateContact(string? Name, string? Title, string? Phone, string? Email, bool IsDecisionMaker);
+
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, Contact input)
+    public async Task<IActionResult> Update(int id, UpdateContact input)
     {
         var c = await db.Contacts.FindAsync(id);
         if (c is null) return NotFound();
-        c.Name = input.Name; c.Title = input.Title; c.Phone = input.Phone; c.Email = input.Email; c.IsDecisionMaker = input.IsDecisionMaker;
+        if (string.IsNullOrWhiteSpace(input.Name)) return BadRequest("Name is required.");
+        c.Name = input.Name.Trim(); c.Title = input.Title; c.Phone = input.Phone; c.Email = input.Email; c.IsDecisionMaker = input.IsDecisionMaker;
         await db.SaveChangesAsync();
         return NoContent();
     }
@@ -456,14 +465,17 @@ public class DealsController(CrmDb db) : ControllerBase
         return Ok(new { d.Id });
     }
 
+    public record UpdateDeal(string? Title, int ProductId, string? Module, string? Segment, int Units, decimal Value, string? Stage, int CloseProbability, DateTime? ExpectedCloseDate, string? Notes);
+
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, Deal input)
+    public async Task<IActionResult> Update(int id, UpdateDeal input)
     {
         var d = await db.Deals.FindAsync(id);
         if (d is null) return NotFound();
-        if (!Stages.All.Contains(input.Stage)) return BadRequest("Invalid stage.");
+        if (input.Stage is null || !Stages.All.Contains(input.Stage)) return BadRequest("Invalid stage.");
         if (!await db.Products.AnyAsync(p => p.Id == input.ProductId)) return BadRequest("Choose a product.");
-        d.Title = input.Title; d.ProductId = input.ProductId; d.Module = input.Module; d.Segment = input.Segment; d.Units = Math.Max(1, input.Units); d.Value = input.Value; d.Stage = input.Stage;
+        if (string.IsNullOrWhiteSpace(input.Title)) return BadRequest("Title is required.");
+        d.Title = input.Title.Trim(); d.ProductId = input.ProductId; d.Module = input.Module; d.Segment = input.Segment; d.Units = Math.Max(1, input.Units); d.Value = input.Value; d.Stage = input.Stage;
         d.CloseProbability = input.CloseProbability; d.ExpectedCloseDate = input.ExpectedCloseDate; d.Notes = input.Notes; d.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync();
         return NoContent();
